@@ -1,13 +1,15 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_Hs
-#include "receivethread.h"
+#include <QString>
+#include <QtNetwork>
 
-QString & getQStringFromSock(ReceiveThread * t);
-void readChar(char * dest, int length,ReceiveThread * t);
-void readInt(int * dest, ReceiveThread * t);
+class Exception;
+void readCharSock(char * dest, int length,QTcpSocket * t);
+void readIntSock(int * dest, QTcpSocket * t);
+QString & readQStringSock(QTcpSocket * t);
+QByteArray & readDataSock(QTcpSocket * t) throw (Exception);
+void writeIntSock(int * source, QTcpSocket * t);
+void writeQStringSock(QString & source,QTcpSocket * t);
 QString & convertCharStoQString(char * source);
-QByteArray & getDataFromSock(ReceiveThread * t) throw (ServerException);
-void writeInt(int * source, ReceiveThread * t);
-void writeQString(QString & source,ReceiveThread * t);
 
 #endif // PROTOCOL_H

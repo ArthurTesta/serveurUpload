@@ -3,7 +3,8 @@
 #include <QThread>
 #include <QTcpSocket>
 #include <medialist.h>
-#include "serverexception.h"
+#include "exception.h"
+#include "protocol.h"
 
 /*
   ARTHUR 27/11 : Thread servant à la gestion des réceptions de média
@@ -14,7 +15,6 @@ class ReceiveThread: public QThread
     Q_OBJECT
 
 public:
-
     /*
       ARTHUR 27/11 :
       socketDescriptor Permet de crée un QTcpSocket pour chaque client
@@ -28,7 +28,6 @@ public:
       NB : Economie de ressources vs boucle
      */
     void run();
-    friend class Protocol;
 
 signals:
     /*
@@ -36,13 +35,12 @@ signals:
      */
     void error(QTcpSocket::SocketError socketError);
 private:
-    friend QString & getQStringFromSock(ReceiveThread * t);
-    friend void readChar(char * dest, int length,ReceiveThread * t);
-    friend void readInt(int * dest, ReceiveThread * t);
-    friend QString & convertCharStoQString(char * source);
-    friend QByteArray & getDataFromSock(ReceiveThread * t) throw (ServerException);
-    friend void writeIntSock(int * source, ReceiveThread * t);
-    friend void writeQStringSock(QString & source, ReceiveThread * t);
+    friend void readCharSock(char * dest, int length,QTcpSocket * t);
+    friend void readIntSock(int * dest, QTcpSocket * t);
+    friend QByteArray & readDataSock(QTcpSocket * t) throw (Exception);
+    friend QString & readQStringSock(QTcpSocket * t);
+    friend void writeIntSock(int * source, QTcpSocket * t);
+    friend void writeQStringSock(QString & source,QTcpSocket * t);
     /*
       ARTHUR 27/11 :
       socketDescriptor Permet de crée un QTcpSocket pour chaque client

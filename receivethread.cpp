@@ -1,6 +1,6 @@
 #include "receivethread.h"
 #include <QtNetwork>
-#include "serverexception.h"
+#include "exception.h"
 
 ReceiveThread::ReceiveThread(int socketDescriptor, QString pathFile, QObject * parent):socketDescriptor(socketDescriptor), pathFile(pathFile), QThread(parent),reading(false){
     clientConnection = new QTcpSocket();
@@ -24,11 +24,18 @@ void ReceiveThread::lire_data(){
         qDebug() << "[SERV] - READ";
         QTime * t= new QTime;
         int date = t->currentTime().minute()+t->currentTime().second()+t->currentTime().hour()+t->currentTime().msec();
-        QString & fileName = getQStringFromSock(this);
+        QString & fileName = readQStringSock(clientConnection);
         qDebug() << "[SERV] - FileName" << fileName;
-        QString & description = getQStringFromSock(this);
+        QString & description = readQStringSock(clientConnection);
         qDebug() << "[SERV] - Description" << description;
-        QByteArray & data = getDataFromSock(this);
+        QByteArray data;
+        try{
+            data += readDataSock(clientConnection);
+        }
+        catch(...){
+            qDebug() << "OHOHOH";
+        }
+
         pathFile+="/"+fileName;
         qDebug() << "[SERV] - CHECKING DB";
 
@@ -46,16 +53,16 @@ void ReceiveThread::lire_data(){
             qDebug() << "[SERV] - BYTES WRITTEN" << data.length();
             listMedia.AddMovie(fileName,description,date);
             QString result = "Everything ok";
-            writeQStringSock(result,this);
+            writeQStringSock(result,clientConnection);
             clientConnection->close();
             return;
         } else{
             qDebug() << "[SERV] - FILE ALREADY EXIST";
-            throw ServerException("File already exists");
+            throw Exception("File already exists");
         }
-    }catch(ServerException e){
+    }catch(Exception e){
         QString result = QString::fromStdString(e.what());
-        writeQStringSock(result, this);
+        writeQStringSock(result, clientConnection);
         clientConnection->close();
         return;
     }

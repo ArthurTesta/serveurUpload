@@ -1,11 +1,13 @@
-#include <protocol.h>
+#include "receivethread.h"
+#include "protocol.h"
+#include "exception.h"
 
-QString & getQStringFromSock(ReceiveThread * t){
-    int size;
-    t->clientConnection->read((char *)&size,sizeof(int));
-    char * destTmp = new char [size-1];
-    t->clientConnection->read((char *) destTmp, size);
-    return convertCharStoQString(destTmp);
+void readCharSock(char * dest, int length, QTcpSocket * t){
+     t->read((char *) dest, length);
+}
+
+void readIntSock(int * dest, QTcpSocket * t){
+    t->read((char *)dest,sizeof(int));
 }
 QString & convertCharStoQString(char * destTmp){
     QString * dest = new QString;
@@ -16,34 +18,36 @@ QString & convertCharStoQString(char * destTmp){
     }
     return (*dest);
 }
-
-void readChar(char * dest, int length, ReceiveThread * t){
-    t->clientConnection->read((char *) dest, length);
+QString & readQStringSock(QTcpSocket * t){
+    int size;
+     t->read((char *)&size,sizeof(int));
+    char * destTmp = new char [size-1];
+     t->read((char *) destTmp, size);
+    return convertCharStoQString(destTmp);
 }
-void readInt(int * dest, ReceiveThread * t){
-    t->clientConnection->read((char *)dest,sizeof(int));
-}
 
-QByteArray & getDataFromSock(ReceiveThread * t) throw (ServerException){
+QByteArray & readDataSock(QTcpSocket * t) throw (Exception){
     int size=0;
     QByteArray * data = new QByteArray;
-    t->clientConnection->read((char *)&size,sizeof(int));
+     t->read((char *)&size,sizeof(int));
     while (data->length()<size){
-        if(!t->clientConnection->waitForReadyRead(5000)){
+        if(! t->waitForReadyRead(5000)){
             qDebug() << "[SERV] - TIME OUT";
-            throw ServerException("Server Time out");
+            throw Exception("Server Time out");
         }
-        (*data) +=t->clientConnection->read(t->clientConnection->bytesAvailable());
+        (*data) += t->read( t->bytesAvailable());
     }
     return (*data);
 }
-void writeInt(int * source, ReceiveThread * t){
-    t->clientConnection->write(((char *)source),sizeof(int));
+
+void writeIntSock(int * source, QTcpSocket * t){
+     t->write(((char *)source),sizeof(int));
 }
-void writeQString(QString & source, ReceiveThread * t){
+
+void writeQStringSock(QString & source, QTcpSocket * t){
     int size = source.length()+1;
     QByteArray ba = source.toLocal8Bit();
     char * tmpStock = ba.data();
-    writeInt(&size,t);
-    t->clientConnection->write(tmpStock,size);
+    writeIntSock(&size,t);
+     t->write(tmpStock,size);
 }

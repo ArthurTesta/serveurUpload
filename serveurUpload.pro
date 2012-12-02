@@ -24,7 +24,7 @@ HEADERS  += mainwindowservfinal.h \
     media.h \
     medialist.h \
     receivethread.h \
-    serverexception.h \
-    protocol.h
+    protocol.h \
+    exception.h
 
 FORMS    += mainwindowservfinal.ui
