@@ -38,15 +38,6 @@ private:
     QList<QHostAddress> ipAddressesList;
     QString pathFile;
 
-    /*
-      ARTHUR 27/11 : Permets de ne pas allez faire de select chaque fois qu'on doit envoyer un film
-     */
-    MediaList * bdContent;
-
-    /*
-      ARTHUR 27/11 : Debug, permets d'envoyer sur le debug une liste de média
-     */
-    void debugMediaList();
 signals:
     
 public slots:

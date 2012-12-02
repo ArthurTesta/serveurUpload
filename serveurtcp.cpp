@@ -7,15 +7,6 @@ ServeurTcp::ServeurTcp()
     qDebug() << "[SERV] - INITIALISATION";
     // On récupère toutes les interfaces réseaux
     ipAddressesList = QNetworkInterface::allAddresses();
-    /*bdContent = new MediaList();
-    debugMediaList();*/
-}
-
-void ServeurTcp::debugMediaList(){
-    QList < Media > list = bdContent->getMediaList();
-    for (int cpt=0;cpt<list.size();cpt++){
-        qDebug() << list.at(cpt).getTitle() << list.at(cpt).getSynopsis() << list.at(cpt).getDate();
-    }
 }
 
 /*
@@ -85,11 +76,10 @@ void ServeurTcp::incomingConnection(int socketDescriptor)
 {
     try{
     qDebug() << "[SERV] - CONNEXION OK";
-    QTcpSocket *tcp_sock_tmp = new QTcpSocket();
-    tcp_sock_tmp->setSocketDescriptor(socketDescriptor);
     ReceiveThread * thread = new ReceiveThread(socketDescriptor, pathFile, this);
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    thread->start();}
+    thread->start();
+    }
     catch(...){
         qDebug() << "[SERV] - ERROR IN THREAD";
     }

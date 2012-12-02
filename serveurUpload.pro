@@ -16,12 +16,15 @@ SOURCES += main.cpp\
     serveurtcp.cpp \
     media.cpp \
     medialist.cpp \
-    receivethread.cpp
+    receivethread.cpp \
+    protocol.cpp
 
 HEADERS  += mainwindowservfinal.h \
     serveurtcp.h \
     media.h \
     medialist.h \
-    receivethread.h
+    receivethread.h \
+    serverexception.h \
+    protocol.h
 
 FORMS    += mainwindowservfinal.ui

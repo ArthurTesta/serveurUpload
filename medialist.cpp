@@ -21,7 +21,7 @@ MediaList::MediaList() {
 bool MediaList::createConnection() {
     qDebug() << "Opening connection..." << endl;
     *(db) = QSqlDatabase::addDatabase("QSQLITE");
-    db->setDatabaseName("movies.db");
+    db->setDatabaseName("/home/arthur/Bureau/projetCPP/serveurUpload/movies.db");
     db->setHostName("");
     db->setPassword("");
     return db->open();
@@ -33,25 +33,12 @@ void MediaList::closeConnection() {
 }
 
 void MediaList::buildList() {
+    if(!db->isOpen()){
+        db->open();
+    }
     if (db->isOpen()) {
         QSqlQuery query;
         query.setForwardOnly(true);
-        /*
-          ARTHUR 27/11 :
-
-          NB : J'ai eu pleins de problèmes parce que les drivers de qt sont pas les bons pour sqlite 3 donc j'ai du faire les création
-          à partir d'ici je les ai laissé parce qu'on en aura encore besoin ...
-          NB2 : Le path n'est pas dans les champs parce que j'ai imaginé que le path = filePath+fileName maintenant c'est facile à changer
-
-        QSqlQuery create = db->exec("CREATE TABLE media ( id INTEGER PRIMARY KEY, title TEXT, synopsis TEXT, date INTEGER)");
-                qDebug() << create.lastError();
-        QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title,synopsis,date) VALUES('Leon','Great movie',1997)");
-                qDebug() << insert.lastError();
-        QSqlQuery insert2 = db->exec("INSERT OR REPLACE INTO media (title,synopsis,date) VALUES('Iron Man','Armor man',2008)");
-                qDebug() << insert2.lastError();
-        QSqlQuery update = db->exec("UPDATE media SET title= 'Independance Day', synopsis='Alien movie', date=1996 WHERE id=4");
-                qDebug() << update.lastError();
-         */
         query.exec("SELECT * FROM media");
         while (query.next()) {
             int id = query.value(0).toInt();
@@ -61,6 +48,7 @@ void MediaList::buildList() {
             Media * media = new Media(id,title, synopsis, date);
             mediaList->push_back((*media));
         }
+        closeConnection();
     }
 }
 
@@ -69,11 +57,39 @@ void MediaList::buildList() {
   Ajout d'un film à la médialist et à la BD
  */
 void MediaList::AddMovie(QString title, QString synopsis, int date){
-    QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title,synopsis,date) VALUES('"+ title+ "','"+synopsis+"',"+1997+")");
-    QSqlError e= insert.lastError();
-    if(e!=0){
-    qDebug() << "[SERV] - MEDIALIST - ADD TO DB ERROR" << e;
+    if(!db->isOpen()){
+        db->open();
     }
+    if (db->isOpen()) {
+        QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title, synopsis, date) VALUES ( '"+ title + "' , '" + synopsis + "' , " + QString::number(date) + " )");
+        QSqlError e= insert.lastError();
+        if(e.text().length()!=0){
+            qDebug() << "[SERV] - MEDIALIST - ADD TO DB ERROR" << e;
+        }
+        closeConnection();
+    }
+}
+/*
+  ARTHUR 30/11 :
+  Recherche d'un film dans la db
+ */
+bool MediaList::isMovieInDB(QString title){
+    if(!db->isOpen()){
+        db->open();
+    }
+    if (db->isOpen()) {
+        QList < Media > list = getMediaList();
+        int cpt=0;
+        while (cpt<list.size()){
+            if(list.at(cpt).getTitle()==title){
+                qDebug() << "[SERV] - MOVIE ALREADY IN DB";
+                return true;
+            }
+            cpt++;
+        }
+        closeConnection();
+    }
+    return false;
 }
 
 QList<Media> MediaList::getMediaList() const {
@@ -81,10 +97,33 @@ QList<Media> MediaList::getMediaList() const {
 }
 
 void MediaList::refreshList() {
-    if (createConnection()) {
+    if(!db->isOpen()){
+        db->open();
+    }
+    if (db->isOpen()) {
         delete mediaList;
         mediaList = new QList<Media>;
         buildList();
         closeConnection();
     }
 }
+
+
+
+
+/*
+ARTHUR 27/11 :
+
+NB : J'ai eu pleins de problèmes parce que les drivers de qt sont pas les bons pour sqlite 3 donc j'ai du faire les création
+à partir d'ici je les ai laissé parce qu'on en aura encore besoin ...
+NB2 : Le path n'est pas dans les champs parce que j'ai imaginé que le path = filePath+fileName maintenant c'est facile à changer
+
+QSqlQuery create = db->exec("CREATE TABLE media ( id INTEGER PRIMARY KEY, title TEXT, synopsis TEXT, date INTEGER)");
+    qDebug() << create.lastError();
+QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title,synopsis,date) VALUES('Leon','Great movie',1997)");
+    qDebug() << insert.lastError();
+QSqlQuery insert2 = db->exec("INSERT OR REPLACE INTO media (title,synopsis,date) VALUES('Iron Man','Armor man',2008)");
+    qDebug() << insert2.lastError();
+QSqlQuery update = db->exec("UPDATE media SET title= 'Independance Day', synopsis='Alien movie', date=1996 WHERE id=4");
+    qDebug() << update.lastError();
+*/
