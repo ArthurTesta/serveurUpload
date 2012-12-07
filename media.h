@@ -16,13 +16,13 @@ private:
     int id;
     QString * title;
     QString * synopsis;
-    int date;
+    QString * date;
 
 public:
 
-    Media(const int id, const QString title, const QString synopsis, const int date);
+    Media(const int id, const QString title, const QString synopsis, const QString date);
 
-    int getDate() const;
+    QString getDate() const;
 
     QString getSynopsis() const;
 

@@ -28,8 +28,9 @@ public:
 
     void refreshList();
 
-    void AddMovie(QString title, QString synopsis, int date);
+    void AddMovie(QString title, QString synopsis, QString date);
     bool isMovieInDB(QString title);
+    void qDebugAll();
 };
 
 #endif // MEDIALIST_H

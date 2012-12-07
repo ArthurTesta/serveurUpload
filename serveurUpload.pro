@@ -16,8 +16,8 @@ SOURCES += main.cpp\
     serveurtcp.cpp \
     media.cpp \
     medialist.cpp \
-    receivethread.cpp \
-    protocol.cpp
+    protocol.cpp \
+    receivethread.cpp
 
 HEADERS  += mainwindowservfinal.h \
     serveurtcp.h \

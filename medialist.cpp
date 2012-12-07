@@ -17,6 +17,24 @@ MediaList::MediaList() {
         qDebug() << "Error !" << endl;
     }
 }
+void MediaList::qDebugAll(){
+    if(!db->isOpen()){
+        db->open();
+    }
+    if (db->isOpen()) {
+        QSqlQuery query;
+        query.setForwardOnly(true);
+        query.exec("SELECT * FROM media");
+        while (query.next()) {
+            int id = query.value(0).toInt();
+            QString title = query.value(1).toString();
+            QString synopsis = query.value(2).toString();
+            QString date = query.value(3).toString();
+            qDebug() << id << title << synopsis << date;
+        }
+        closeConnection();
+    }
+}
 
 bool MediaList::createConnection() {
     qDebug() << "Opening connection..." << endl;
@@ -38,13 +56,14 @@ void MediaList::buildList() {
     }
     if (db->isOpen()) {
         QSqlQuery query;
+       // query.exec("delete from media where id>3");
         query.setForwardOnly(true);
         query.exec("SELECT * FROM media");
         while (query.next()) {
             int id = query.value(0).toInt();
             QString title = query.value(1).toString();
             QString synopsis = query.value(2).toString();
-            int date = query.value(3).toInt();
+            QString date = query.value(3).toString();
             Media * media = new Media(id,title, synopsis, date);
             mediaList->push_back((*media));
         }
@@ -56,16 +75,18 @@ void MediaList::buildList() {
   ARTHUR 30/11 :
   Ajout d'un film à la médialist et à la BD
  */
-void MediaList::AddMovie(QString title, QString synopsis, int date){
+void MediaList::AddMovie(QString title, QString synopsis, QString date){
     if(!db->isOpen()){
         db->open();
     }
     if (db->isOpen()) {
-        QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title, synopsis, date) VALUES ( '"+ title + "' , '" + synopsis + "' , " + QString::number(date) + " )");
+        QSqlQuery insert = db->exec("INSERT OR REPLACE INTO media (title, synopsis, date) VALUES ( '"+ title + "' , '" + synopsis + "' , '" + date + "' )");
         QSqlError e= insert.lastError();
-        if(e.text().length()!=0){
+        if(e.isValid()){
             qDebug() << "[SERV] - MEDIALIST - ADD TO DB ERROR" << e;
         }
+        db->commit();
+        refreshList();
         closeConnection();
     }
 }
@@ -78,10 +99,9 @@ bool MediaList::isMovieInDB(QString title){
         db->open();
     }
     if (db->isOpen()) {
-        QList < Media > list = getMediaList();
         int cpt=0;
-        while (cpt<list.size()){
-            if(list.at(cpt).getTitle()==title){
+        while (cpt<mediaList->size()){
+            if(mediaList->at(cpt).getTitle()==title){
                 qDebug() << "[SERV] - MOVIE ALREADY IN DB";
                 return true;
             }

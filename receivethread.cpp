@@ -20,48 +20,38 @@ void ReceiveThread::lire_data(){
     disconnect(clientConnection,SIGNAL(readyRead()),this,SLOT(lire_data()));
     if(reading)return;
     reading=true;
+    int code=-1;
     try{
-        qDebug() << "[SERV] - READ";
-        QTime * t= new QTime;
-        int date = t->currentTime().minute()+t->currentTime().second()+t->currentTime().hour()+t->currentTime().msec();
-        QString & fileName = readQStringSock(clientConnection);
-        qDebug() << "[SERV] - FileName" << fileName;
-        QString & description = readQStringSock(clientConnection);
-        qDebug() << "[SERV] - Description" << description;
+        QString stringDate(QString::number(QDate::currentDate().day())+ QString::fromStdString("/") + QString::number(QDate::currentDate().month()) +
+                           QString::fromStdString("/")+ QString::number(QDate::currentDate().year()) + QString::fromStdString(" ") +
+                           QString::number(QTime::currentTime().hour()) + QString::fromStdString(":") + QString::number(QTime::currentTime().minute()));
         QByteArray data;
-        try{
-            data += readDataSock(clientConnection);
-        }
-        catch(...){
-            qDebug() << "OHOHOH";
-        }
-
+        QString & fileName = readQStringSock(clientConnection);
+        QString & description = readQStringSock(clientConnection);
+        data += readDataSock(clientConnection);
         pathFile+="/"+fileName;
-        qDebug() << "[SERV] - CHECKING DB";
-
         /*
           TBDINBD
 
          */
         if(!listMedia.isMovieInDB(fileName)){
+
             QFile * entry = new QFile(pathFile);
             if(entry->open(QIODevice::Append)){
-                qDebug() << "[SERV] - WRITE";
                 entry->write(data);
             }
             entry->close();
-            qDebug() << "[SERV] - BYTES WRITTEN" << data.length();
-            listMedia.AddMovie(fileName,description,date);
-            QString result = "Everything ok";
-            writeQStringSock(result,clientConnection);
-            clientConnection->close();
-            return;
+            listMedia.AddMovie(fileName,description,stringDate);
+            code=0;
+            writeIntSock(&code,clientConnection);
+            QString resultMsg(QString::fromStdString("Everything ok"));
+            writeQStringSock(resultMsg,clientConnection);
         } else{
-            qDebug() << "[SERV] - FILE ALREADY EXIST";
             throw Exception("File already exists");
         }
     }catch(Exception e){
         QString result = QString::fromStdString(e.what());
+        writeIntSock(&code,clientConnection);
         writeQStringSock(result, clientConnection);
         clientConnection->close();
         return;
