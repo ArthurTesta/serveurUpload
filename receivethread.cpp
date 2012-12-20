@@ -53,8 +53,6 @@ void ReceiveThread::lire_data(){
         QString result = QString::fromStdString(e.what());
         writeIntSock(&code,clientConnection);
         writeQStringSock(result, clientConnection);
-        clientConnection->close();
-        return;
     }
     clientConnection->close();
 }
